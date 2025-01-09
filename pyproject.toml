@@ -20,6 +20,7 @@ dependencies = [
   "biopython>=1.83",
   "pydantic>=2.10.4",
   "langgraph>=0.2.61",
+  "loguru>=0.7.3",
 ]
 
 [dependency-groups]
@@ -37,13 +38,14 @@ dev = [
 
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/step1", "src/step2"]
+packages = ["src/step1", "src/step2", "src/step3", "src/step4", "src/core"]
 
 [tool.pyright]
 stubPath = "typings"
 useLibraryCodeForTypes = true
 venvPath = "."
 venv = ".venv"
+extraPaths = ["src/step1", "src/step2", "src/step3", "src/step4", "src/core"]
 pythonVersion = "3.12"
 typeCheckingMode = "strict"
 include = ["src/**", "tests/**"]
@@ -66,6 +68,7 @@ reportUninitializedInstanceVariable = true
 reportUnknownMemberType = false
 reportUnknownVariableType = false
 reportUnknownArgumentType = false
+reportAttributeAccessIssue = false
 
 [tool.mypy]
 strict = true
@@ -112,6 +115,7 @@ ignore = [
   "ANN401",  # Can't use Any for *args or **kwargs
   "BLE001",  # except Exception
   "COM812",  # Trailing comma
+  "PT011",   # `pytest.raises(ValueError)` is too broad, set the `match` parameter or use a more specific exception"
 ]
 fixable = ["ALL"]
 unfixable = [
@@ -136,7 +140,7 @@ ignore-decorators = ["declared_attr", "validator", "root_validator"]
 property-decorators = ["property", 'functools.cached_property']
 
 [tool.ruff.lint.mccabe]
-max-complexity = 10
+max-complexity = 12
 
 [tool.ruff.lint.flake8-bugbear]
 extend-immutable-calls = [

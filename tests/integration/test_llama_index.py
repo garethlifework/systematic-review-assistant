@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 import pytest
@@ -18,8 +17,7 @@ from step2.llama_index_integration import (
 @pytest.fixture
 def test_dir(tmp_path: Path) -> Path:
     """Create a temporary directory for tests."""
-    test_dir = tmp_path / "test_pubmed_index"
-    return test_dir
+    return tmp_path / "test_pubmed_index"
     # Clean up is handled automatically by pytest's tmp_path
 
 
@@ -70,4 +68,4 @@ def test_build_llama_index_from_pubmed(test_dir: Path) -> None:
 
     # Assertions
     assert isinstance(index, VectorStoreIndex)
-    assert os.path.exists(test_dir)
+    assert Path.exists(test_dir)

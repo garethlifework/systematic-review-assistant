@@ -5,6 +5,7 @@ from typing import Any, cast
 
 from Bio import Entrez
 from dotenv import load_dotenv
+from loguru import logger
 
 # Load environment variables
 load_dotenv()
@@ -14,7 +15,8 @@ email = os.getenv("NCBI_EMAIL")
 api_key = os.getenv("NCBI_API_KEY")
 
 if email is None or api_key is None:
-    raise ValueError("Missing NCBI_EMAIL or NCBI_API_KEY in .env file")
+    msg = "Missing NCBI_EMAIL or NCBI_API_KEY in .env file"
+    raise ValueError(msg)
 
 # Type ignore for Entrez attributes which are dynamically set
 Entrez.email = email  # type: ignore
@@ -28,21 +30,25 @@ def pubmed_search(query: str, max_results: int = 1000) -> list[str]:
         handle = Entrez.esearch(db="pubmed", term=query, retmax=max_results)  # type: ignore
         record = Entrez.read(handle)  # type: ignore
         handle.close()
-        pmid_list = record.get("IdList", [])
+        pmid_list = record.get("IdList", [])  # type: ignore
 
         if not pmid_list:
-            print(f"Warning: No results found for query: {query}")
+            msg = "No results found for query: {!r}"
+            logger.warning(msg, query)
 
         return cast(list[str], pmid_list)
 
     except Exception as e:
-        raise Exception(f"PubMed search failed: {e!s}")
+        msg = f"PubMed search failed: {e!s}"
+        logger.opt(exception=True).error(msg)
+        raise
 
 
 def pubmed_fetch_details(pmids: list[str]) -> dict[str, Any]:
     """Fetches article details for each PMID using EFetch."""
     if not pmids:
-        raise ValueError("No PMIDs provided")
+        msg = "No PMIDs provided"
+        raise ValueError(msg)
 
     try:
         # Process PMIDs in batches to avoid overwhelming the server
@@ -62,13 +68,15 @@ def pubmed_fetch_details(pmids: list[str]) -> dict[str, Any]:
                 all_records.update(records)
             else:
                 all_records.update(
-                    {str(i): record for i, record in enumerate(records, start=i)}
+                    {str(i): record for i, record in enumerate(records, start=i)}  # type: ignore
                 )
 
         return all_records
 
     except Exception as e:
-        raise Exception(f"Failed to fetch PubMed details: {e!s}")
+        msg = f"Failed to fetch PubMed details: {e!s}"
+        logger.opt(exception=True).error(msg)
+        raise
 
 
 def extract_article_info(article: dict[str, Any]) -> dict[str, str]:
@@ -102,12 +110,7 @@ def extract_article_info(article: dict[str, Any]) -> dict[str, str]:
             ),
         }
 
-    except KeyError as e:
-        print(f"Warning: Could not extract some article information: {e}")
-        return {
-            "pmid": "Error",
-            "title": "Error extracting information",
-            "abstract": "Error extracting information",
-            "journal": "Error",
-            "year": "Error",
-        }
+    except KeyError:
+        msg = "Could not extract article information"
+        logger.opt(exception=True).error(msg)
+        raise

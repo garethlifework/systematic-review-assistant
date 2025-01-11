@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import datetime
 import json
-import os
 import uuid
+from datetime import datetime, timezone
+from pathlib import Path
 from typing import cast
 
 import streamlit as st
@@ -29,7 +29,7 @@ def init_agent_config() -> RunnableConfig:
 
 def init_suggestion_agent() -> SuggestionAgent:
     """Initialize the suggestion agent."""
-    return SuggestionAgent(model="gpt-4", temperature=0.0)
+    return SuggestionAgent(model="gpt-4o", temperature=0.0)
 
 
 # Set up page
@@ -47,9 +47,6 @@ if "llm_suggestions" not in st.session_state:
     st.session_state["llm_suggestions"] = ""
 if "suggestions_agent" not in st.session_state:
     st.session_state["suggestions_agent"] = init_suggestion_agent()
-if "suggestions_agent_state" not in st.session_state:
-    st.session_state.suggestions_agent_state = {}
-    st.session_state.suggestions_agent_state["messages"] = []
 
 # Layout for input fields and LLM feedback
 col1, col2 = st.columns(2)
@@ -102,16 +99,14 @@ if save_button:
         "research_question": st.session_state["research_question"],
         "inclusion_criteria": st.session_state["inclusion_criteria"],
         "exclusion_criteria": st.session_state["exclusion_criteria"],
-        "timestamp": datetime.datetime.now().isoformat(),
+        "timestamp": datetime.now(tz=timezone.utc).isoformat(),
     }
 
     # Create directories if they don't exist
-    os.makedirs("criteria", exist_ok=True)
-    os.makedirs("logs", exist_ok=True)
+    Path("criteria").mkdir(parents=True, exist_ok=True)
+    Path("logs").mkdir(parents=True, exist_ok=True)
 
-    filename = (
-        f"criteria/criteria_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-    )
+    filename = f"criteria/criteria_{datetime.now(tz=timezone.utc).strftime('%Y%m%d_%H%M%S')}.json"
     with open(filename, "w") as f:
         json.dump(criteria_data, f, indent=2)
 

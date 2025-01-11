@@ -4,14 +4,16 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass
-from typing import Dict, List, Any, Union, cast
+from typing import cast
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import MemorySaver
-from langgraph.graph import START, MessagesState
+from langgraph.graph import START
+from langgraph.graph.message import MessagesState
 from langgraph.graph.state import CompiledStateGraph, StateGraph
+from loguru import logger
 
 
 @dataclass
@@ -45,20 +47,20 @@ class ReviewCriteria:
 class SuggestionAgent:
     """Agent for providing suggestions on systematic review criteria."""
 
-    def __init__(self, model: str = "gpt-4", temperature: float = 0.0):
+    def __init__(self, model: str = "gpt-4o", temperature: float = 0.0) -> None:
         """Initialize the agent with model configuration."""
         self.llm = ChatOpenAI(model=model, temperature=temperature)
         self.workflow = self._create_workflow()
         self.memory = MemorySaver()
         self.agent = self._compile_agent()
-        self.messages: List[BaseMessage] = []
+        self.messages: list[BaseMessage] = []
         self.config = self._create_config()
 
     def _create_workflow(self) -> StateGraph:
         """Create the agent workflow."""
         workflow = StateGraph(state_schema=MessagesState)
 
-        def call_model(state: MessagesState) -> Dict[str, AIMessage]:
+        def call_model(state: MessagesState) -> dict[str, AIMessage]:
             """Call the model with the current state."""
             response = cast(AIMessage, self.llm.invoke(state["messages"]))
             return {"messages": response}
@@ -94,9 +96,11 @@ class SuggestionAgent:
         if isinstance(ai_message, AIMessage):
             self.messages.append(ai_message)
             return cast(str, ai_message.content)
-        raise ValueError(f"Unexpected message type: {type(ai_message)}")
+        msg = "Unexpected message type: {!r}"
+        logger.error(msg, type(ai_message))
+        raise ValueError(msg.format(type(ai_message)))
 
-    def get_message_history(self) -> List[BaseMessage]:
+    def get_message_history(self) -> list[BaseMessage]:
         """Get the full message history."""
         return self.messages.copy()
 

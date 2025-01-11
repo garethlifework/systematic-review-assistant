@@ -25,7 +25,8 @@ def build_pubmed_query(
 
     # 1) Combine keywords
     if not keywords:
-        raise ValueError("At least one keyword is required")
+        msg = "At least one keyword is required"
+        raise ValueError(msg)
 
     keyword_query = " OR ".join([f"({kw})" for kw in keywords])
 

@@ -1,14 +1,16 @@
 # llama_index_integration.py
 from __future__ import annotations
 
-import logging
+import sys
 from typing import Any
 
 from llama_index.core.indices import VectorStoreIndex
 from llama_index.core.schema import TextNode
 from llama_index.core.storage.storage_context import StorageContext
+from loguru import logger
 
-logger = logging.getLogger(__name__)
+logger.remove(0)
+logger.add(sys.stderr, format="{time:YYYY-MM-DD at HH:mm:ss!UTC} | {level} | {message}")
 
 
 def pubmed_records_to_textnodes(pubmed_records: list[dict[str, Any]]) -> list[TextNode]:
@@ -79,7 +81,7 @@ def build_llama_index_from_pubmed(
         return index
 
     except Exception as e:
-        logger.error(f"Error building index: {e}")
+        logger.opt(exception=True).error("Error building index: {}", e)
         return None
 
 
@@ -97,5 +99,5 @@ if __name__ == "__main__":
     }
 
     docs = pubmed_records_to_textnodes([test_record])
-    print("Test document created:")
-    print(docs[0].text)
+    logger.info("Test document created:")
+    logger.info("Document text: {!r}", docs[0].text)

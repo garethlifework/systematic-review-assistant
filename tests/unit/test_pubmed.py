@@ -23,7 +23,7 @@ def test_pubmed_search() -> None:
 
 
 @pytest.mark.integration
-def test_pubmed_fetch_details(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_pubmed_fetch() -> None:
     """Test fetching article details."""
     # Use a small sample of PMIDs
     pmids = ["123456", "789012"]

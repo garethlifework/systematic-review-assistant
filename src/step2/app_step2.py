@@ -51,7 +51,7 @@ def run_step2_search_and_index() -> None:
 
         # Build LlamaIndex
         index = build_llama_index_from_pubmed(
-            pubmed_records, index_path="pubmed_index.json"
+            [pubmed_records], index_path="pubmed_index.json"
         )
         if index:
             st.success("LlamaIndex built and saved as pubmed_index.json.")
